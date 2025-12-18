@@ -1,72 +1,52 @@
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
 export async function handlePost(
-  req: any,
-  res: any,
+  req: NextRequest,
+  res: typeof NextResponse,
   redis: (key: string) => Promise<any>
 ) {
   const xKey = req.headers.get("x-key");
-  const fnKey = req.nextUrl.searchParams.get("fnKey") || undefined;
-  const fcApi = req.nextUrl.searchParams.get("fcApi") || undefined;
-  const redisKey = fcApi ? `fcApi:${fcApi}` : fnKey ? `${xKey}:${fnKey}` : `${xKey}`;
-  const headers = new Headers(req.headers);
-
-  // ----------------------------------------------------
-  // 1️⃣ fcApi MODE (special rule, no x-key or fnKey needed)
-  // ----------------------------------------------------
-  if (fcApi) {
-    const redisRes = await redis(redisKey);
-    if (!redisRes.success) {
-      return res.json(redisRes, { status: 401 });
-    }
-
-    headers.set("x-auth-data", JSON.stringify(redisRes));
-    headers.set("x-auth-key", fcApi);
-
-    return res.next({
-      request: { headers },
-    });
-  }
-
-  // ----------------------------------------------------
-  // 2️⃣ STANDARD MODE (x-key + fnKey required)
-  // ----------------------------------------------------
-
   if (!xKey) {
     return res.json(
       { success: false, error: "Missing x-key" },
       { status: 400 }
     );
   }
-
-  if (!fnKey) {
-    return res.json(
-      { success: false, error: "Missing fnKey" },
-      { status: 400 }
-    );
+  const params = Array.from(req.nextUrl.searchParams.entries());
+  let selectedParam: { key: string; value: string } | null = null;
+  const fnKey = req.nextUrl.searchParams.get("fnKey");
+  // const fnKey = params.find(([k]) => k === "fnKey");
+  if (selectedParam === null && params.length > 0) {
+    const [k, v] = params[0];
+    selectedParam = { key: k, value: v };
   }
-
-  const redisRes = await redis(`${xKey}:${fnKey}`);
-
+  const redisKey = 
+    selectedParam && fnKey ? `${selectedParam.key}:${selectedParam.value}:${xKey}:${fnKey}` :
+    selectedParam ? `${selectedParam.key}:${selectedParam.value}:${xKey}` :
+    fnKey ? `${xKey}:${fnKey}:` :
+    `${xKey}`;
+  const redisRes = await redis(redisKey);
   if (!redisRes.success) {
-    return res.json(redisRes, { status: 401 });
-  }
-  const fullData = redisRes.fnData;
-  const allowedKeys = ["db", "fn", "graphql", "vector"];
-  const matchedKey = allowedKeys.find((key) => fullData[key]);
-
-  if (!matchedKey) {
     return res.json(
-      { success: false, error: "No valid operation key found in Redis" },
-      { status: 400 }
+      {
+        success: false,
+        error: "Missing redis mapped data",
+      },
+      { status: 401 }
     );
   }
-
-  const filteredData = fullData[matchedKey];
-
-  headers.set("x-auth-data", JSON.stringify(filteredData));
+  console.log("Redis Response:", redisRes);
+  const headers = new Headers(req.headers);
+  headers.delete("x-key");
   headers.set("x-auth-key", xKey);
-  headers.set("x-auth-fnkey", fnKey);
+  headers.set("x-auth-data", JSON.stringify(redisRes.data));
 
-  return res.next({
-    request: { headers },
-  });
+  if (selectedParam) {
+    headers.set(
+      `x-${selectedParam.key.toLowerCase()}-key`,
+      selectedParam.value
+    );
+  }
+  return res.next({ request: { headers } });
 }
