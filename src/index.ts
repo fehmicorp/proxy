@@ -1,3 +1,4 @@
+import { Cookie } from './../node_modules/undici-types/cookies.d';
 import { NextResponse } from "next/server";
 import { handleGet } from "./get";
 import { handlePost } from "./post";
@@ -24,5 +25,30 @@ export class Proxy {
     }
 
     return NextResponse.next();
+  }
+}
+export class CookieConfig{
+  static async setCookie(
+    req: any,
+    res: any,
+    token: string,
+    cookieCfg: any
+  ) {
+    const fnKey = req.headers.get("x-fn-key") ? req.headers.get("x-fn-key") : null;
+    const authKey = req.headers.get("x-auth-key") ? req.headers.get("x-auth-key") : null;
+    const cookieName = fnKey ? `${authKey}:${fnKey}` : authKey ? `${authKey}` : null;
+    const { setAuthCookie, readAuthCookie } = await import("./cookie");
+    const existingToken = await readAuthCookie(req, { name: cookieName });
+    const cookieConfig = {
+      ...cookieCfg.cookie,
+      name: cookieName,
+    };
+    if (existingToken) {
+      // Cookie already set, update the cookie
+      setAuthCookie(res, token, cookieConfig);
+    } else {
+      // Set new cookie
+      setAuthCookie(res, token, cookieConfig);
+    }
   }
 }

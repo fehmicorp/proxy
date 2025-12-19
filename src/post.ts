@@ -17,9 +17,11 @@ export async function handlePost(
   let selectedParam: { key: string; value: string } | null = null;
   const fnKey = req.nextUrl.searchParams.get("fnKey");
   // const fnKey = params.find(([k]) => k === "fnKey");
-  if (selectedParam === null && params.length > 0) {
-    const [k, v] = params[0];
+    for (const [k, v] of params) {
+    if (k === "fnKey") continue;
+    if (k === "refresh") continue;
     selectedParam = { key: k, value: v };
+    break;
   }
   const redisKey = 
     selectedParam && fnKey ? `${selectedParam.key}:${selectedParam.value}:${xKey}:${fnKey}` :
@@ -36,15 +38,15 @@ export async function handlePost(
       { status: 401 }
     );
   }
-  console.log("Redis Response:", redisRes);
   const headers = new Headers(req.headers);
   headers.delete("x-key");
   headers.set("x-auth-key", xKey);
+  if(fnKey){ headers.set("x-fn-key", fnKey); }
   headers.set("x-auth-data", JSON.stringify(redisRes.data));
 
   if (selectedParam) {
     headers.set(
-      `x-${selectedParam.key.toLowerCase()}-key`,
+      `x-${selectedParam.key}-key`,
       selectedParam.value
     );
   }

@@ -1,4 +1,4 @@
-export function setAuthCookie(
+export async function setAuthCookie(
   res: any,
   token: string,
   cookieCfg: any
@@ -13,13 +13,10 @@ export function setAuthCookie(
   });
 }
 
-/**
- * Read auth cookie
- */
-export function readAuthCookie(
+export async function readAuthCookie(
   req: any,
   cookieCfg: any
-): string | null {
+): Promise<string | null> {
   if (!cookieCfg?.name) return null;
   const cookie = req.cookies.get(cookieCfg.name);
   return cookie?.value || null;

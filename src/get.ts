@@ -7,16 +7,20 @@ export async function handleGet(
   res: typeof NextResponse,
   redis: (key: string) => Promise<any>
 ) {
-  let token = readAuthCookie(req, { name: "accounts_token" });
+  let token = await readAuthCookie(req, { name: "accounts_token" });
   
   if (!token) {
-    const auth = req.headers.get("authorization");
-    if (!auth?.startsWith("Bearer ")) {
-      return res.json({ success: false }, { status: 401 });
-    }
-    token = auth.slice(7);
-  }
+    const authHeader = req.headers.get("authorization");
 
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, error: "Missing authentication token" },
+        { status: 401 }
+      );
+    }
+
+    token = authHeader.replace("Bearer ", "").trim();
+  }
   const redisRes = await redis(`jwtToken:auth:${token}`);
   if (!redisRes?.data?.secret) {
     return res.json({ success: false }, { status: 401 });
@@ -26,6 +30,7 @@ export async function handleGet(
 
   const headers = new Headers(req.headers);
   headers.set("x-jwt-secret", redisRes.data.secret);
+  headers.set("Authorization", `Bearer ${token}`);
 
   return res.next({ request: { headers } });
 }
