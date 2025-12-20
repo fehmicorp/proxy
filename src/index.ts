@@ -1,4 +1,3 @@
-import { Cookie } from './../node_modules/undici-types/cookies.d';
 import { NextResponse } from "next/server";
 import { handleGet } from "./get";
 import { handlePost } from "./post";

@@ -1,0 +1,118 @@
+{
+    "dbConf": {
+        "dbHost": "10.10.10.221",
+        "dbPort": 5432,
+        "dbUser": "fcsvr0_pgsql",
+        "dbPwd": "4HNSEMy94pYZoWp635yWFBevVki0EXQ3",
+        "dbType": "pgsql",
+        "dbName": "fcinAuth"
+    },
+    "security": {
+        "jwt": {
+            "secret": "ff15bbb478d6114111e2c41afee39ca6a0ff4ec761de158158b4b5738dc9bca3",
+            "expire": "2h",
+            "refresh": "7d",
+            "payloadMap": {
+                "uid": "uidp",
+                "name": "fullname",
+                "roles": "roles"
+            }
+        },
+        "cookie": {
+            "name": "accounts_token",
+            "httpOnly": true,
+            "secure": true,
+            "sameSite": "strict",
+            "path": "/"
+        },
+        "rateLimit": {
+            "max": 5,
+            "window": "15m"
+        }
+    },
+    "cors": {
+        "enabled": true,
+        "origin": [
+            "https://accounts.fehmi.in"
+        ],
+        "methods": [
+            "GET",
+            "POST"
+        ],
+        "headers": [
+            "Content-Type",
+            "Authorization"
+        ],
+        "credentials": true,
+        "maxAge": 86400
+    },
+    "headers": {
+        "request": [
+            "authorization",
+            "x-device-id"
+        ],
+        "response": {
+            "X-Powered-By": "Fehmi-API"
+        }
+    },
+    "input": {
+        "body": {
+            "required": [
+                "username",
+                "password"
+            ],
+            "map": {
+                "username": [
+                    "username",
+                    "email",
+                    "mobnumber"
+                ],
+                "password": "passwordhash"
+            }
+        }
+    },
+    "rest": {
+        "engine": "sql",
+        "type": "FETCH",
+        "table": "test",
+        "select": [
+            "uidp",
+            "fullname",
+            "username"
+        ],
+        "where": {
+            "or": [
+                "username",
+                "email",
+                "mobnumber"
+            ],
+            "and": "passwordhash"
+        }
+    },
+    "response": {
+        "hide": [
+            "passwordhash"
+        ],
+        "include": [
+            "user",
+            "jwt"
+        ],
+        "onFailure": {
+            "message": "Invalid credentials"
+        }
+    },
+    "audit": {
+        "enabled": true,
+        "collection": "auth_logs",
+        "fields": [
+            "ip",
+            "userAgent",
+            "time"
+        ]
+    },
+    "limit": 1000,
+    "route": "/auth/login",
+    "methods": [
+        "POST"
+    ]
+}

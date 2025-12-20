@@ -1,0 +1,96 @@
+{
+  "dbConf": {
+    "dbHost": "10.10.10.221",
+    "dbPort": 5432,
+    "dbUser": "fcsvr0_pgsql",
+    "dbPwd": "********",
+    "dbType": "pgsql",
+    "dbName": "fcinCore"
+  },
+
+  "graphql": {
+    "operationType": "query",
+    "operationName": "listEmails",
+
+    "arguments": {
+      "select": "[String!]",
+      "limit": "Int",
+      "offset": "Int",
+      "sortBy": "String",
+      "sortOrder": "String",
+      "filter": "JSON"
+    },
+
+    "resolver": {
+      "engine": "sql",
+      "type": "FETCH_LIST",
+
+      "table": "emails",
+
+      "columns": {
+        "allowed": [
+          "id",
+          "email",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "default": [
+          "id",
+          "email",
+          "status"
+        ]
+      },
+
+      "pagination": {
+        "limit": {
+          "default": 25,
+          "max": 100
+        },
+        "offset": {
+          "default": 0
+        }
+      },
+
+      "sorting": {
+        "columns": {
+          "allowed": [
+            "id",
+            "email",
+            "created_at",
+            "updated_at"
+          ],
+          "default": "created_at"
+        },
+        "order": {
+          "allowed": ["ASC", "DESC"],
+          "default": "DESC"
+        }
+      },
+
+      "filter": {
+        "allowed": [
+          "status",
+          "email",
+          "created_at"
+        ]
+      }
+    },
+
+    "response": {
+      "shape": {
+        "rows": "@result",
+        "meta": {
+          "count": "@meta.total",
+          "limit": "@meta.limit",
+          "offset": "@meta.offset",
+          "sortBy": "@meta.sortBy",
+          "sortOrder": "@meta.sortOrder"
+        }
+      }
+    }
+  },
+
+  "route": "/graphql",
+  "methods": ["POST"]
+}
