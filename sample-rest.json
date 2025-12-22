@@ -58,16 +58,17 @@
     "input": {
         "body": {
             "required": [
-                "username",
-                "password"
+                "username"
             ],
+            "auth":{
+                "password":"passwordhash"
+            },
             "map": {
                 "username": [
                     "username",
                     "email",
                     "mobnumber"
-                ],
-                "password": "passwordhash"
+                ]
             }
         }
     },
@@ -85,8 +86,7 @@
                 "username",
                 "email",
                 "mobnumber"
-            ],
-            "and": "passwordhash"
+            ]
         }
     },
     "response": {
