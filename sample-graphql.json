@@ -67,16 +67,13 @@
   },
   "input": {
     "required": [
-      "username"
+      "name"
     ],
-    "auth": {
-      "password": "passwordhash"
-    },
     "map": {
-      "username": [
-        "username",
-        "email",
-        "mobnumber"
+      "name": [
+        "fullname",
+        "displayname",
+        "username"
       ]
     }
   },
@@ -92,43 +89,34 @@
     },
     "resolver": {
       "engine": "sql",
-      "type": "FETCH_LIST",
-
-      "table": "emails",
-
+      "type": "FETCH",
+      "table": "test",
       "columns": {
         "allowed": [
-          "id",
+          "uidp",
+          "username",
           "email",
-          "status",
+          "mobnumber",
+          "fullname",
+          "displayname",
+          "isactive",
           "created_at",
-          "updated_at"
+          "lastlogin"
         ],
-        "default": [
-          "id",
-          "email",
-          "status"
-        ]
+        "default": ["uidp", "username", "displayname"]
       },
-
       "pagination": {
         "limit": {
-          "default": 25,
+          "default": 10,
           "max": 100
         },
         "offset": {
           "default": 0
         }
       },
-
       "sorting": {
         "columns": {
-          "allowed": [
-            "id",
-            "email",
-            "created_at",
-            "updated_at"
-          ],
+          "allowed": ["created_at", "lastlogin", "username", "uidp"],
           "default": "created_at"
         },
         "order": {
@@ -136,28 +124,28 @@
           "default": "DESC"
         }
       },
-
       "filter": {
-        "allowed": [
-          "status",
-          "email",
-          "created_at"
-        ]
+        "allowed": ["isactive", "email", "username", "uidp"],
+        "operators": ["=", "!=", "LIKE", "IN", ">", "<"]
       }
     },
-
     "response": {
       "shape": {
-        "rows": "@result",
-        "meta": {
-          "count": "@meta.total",
-          "limit": "@meta.limit",
-          "offset": "@meta.offset",
-          "sortBy": "@meta.sortBy",
-          "sortOrder": "@meta.sortOrder"
+        "success": true,
+        "data": {
+          "items": "@result",
+          "pagination": {
+            "totalRecords": "@meta.total",
+            "pageSize": "@meta.limit",
+            "skipped": "@meta.offset"
+          },
+          "sortInfo": {
+            "key": "@meta.sortBy",
+            "direction": "@meta.sortOrder"
+          }
         }
       }
-    }    
+    }
   },
   "response": {
     "hide": [
