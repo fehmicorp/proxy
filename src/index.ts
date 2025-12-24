@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handleGet } from "./get";
 import { handlePost } from "./post";
 import { createRedisAccessor } from "./redis";
+import { handleWS } from "./ws";
 type NextLikeRequest = {
   method: string;
   headers: Headers;
@@ -23,6 +24,9 @@ export class Proxy {
       return handleGet(req as any, NextResponse, redis);
     }
 
+    if (method === "WS") {
+      return handleWS(req as any, NextResponse, redis);
+    }
     return NextResponse.next();
   }
 }
